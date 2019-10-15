@@ -153,9 +153,9 @@ def main():
 
     flowBackWarp = model.backWarp(videoFrames.dim[0], videoFrames.dim[1], device).cuda()
     flowBackWarp = flowBackWarp.to(device)
-    print(flowBackWarp.parameters())
-    optimizer2 = torch.optim.SGD(flowBackWarp.parameters(), lr=1e-3)
-    flowBackWarp, optimizer2 = amp.initialize(flowBackWarp, optimizer2, opt_level="O1")
+    # print(flowBackWarp.parameters())
+    # optimizer2 = torch.optim.SGD(flowBackWarp.parameters(), lr=1e-3)
+    # flowBackWarp, optimizer2 = amp.initialize(flowBackWarp, optimizer2, opt_level="O1")
 
     dict1 = torch.load(args.checkpoint, map_location='cpu')
     ArbTimeFlowIntrp.load_state_dict(dict1['state_dictAT'])
