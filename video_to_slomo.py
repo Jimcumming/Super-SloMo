@@ -145,17 +145,20 @@ def main():
     flowComp.to(device)
     for param in flowComp.parameters():
         param.requires_grad = False
-    ArbTimeFlowIntrp = model.UNet(20, 5)
+
+    ArbTimeFlowIntrp = model.UNet(20, 5).cuda()
+    optimizer2 = torch.optim.SGD(ArbTimeFlowIntrp.parameters(), lr=1e-3)
+    ArbTimeFlowIntrp, optimizer2 = amp.initialize(ArbTimeFlowIntrp, optimizer2, opt_level="O1")
+
+
     ArbTimeFlowIntrp.to(device)
     for param in ArbTimeFlowIntrp.parameters():
         param.requires_grad = False
     
 
-    flowBackWarp = model.backWarp(videoFrames.dim[0], videoFrames.dim[1], device).cuda()
+    flowBackWarp = model.backWarp(videoFrames.dim[0], videoFrames.dim[1], device) 
     flowBackWarp = flowBackWarp.to(device)
-    # print(flowBackWarp.parameters())
-    # optimizer2 = torch.optim.SGD(flowBackWarp.parameters(), lr=1e-3)
-    # flowBackWarp, optimizer2 = amp.initialize(flowBackWarp, optimizer2, opt_level="O1")
+    
 
     dict1 = torch.load(args.checkpoint, map_location='cpu')
     ArbTimeFlowIntrp.load_state_dict(dict1['state_dictAT'])
