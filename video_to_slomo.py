@@ -12,6 +12,7 @@ import model
 import dataloader
 import platform
 from tqdm import tqdm
+from apex import amp
 
 # For parsing commandline arguments
 parser = argparse.ArgumentParser()
@@ -137,7 +138,10 @@ def main():
     videoFramesloader = torch.utils.data.DataLoader(videoFrames, batch_size=args.batch_size, shuffle=False)
 
     # Initialize model
-    flowComp = model.UNet(6, 4)
+    flowComp = model.UNet(6, 4).cuda()
+    optimizer = torch.optim.SGD(flowComp.parameters(), lr=1e-3)
+    flowComp, optimizer = amp.initialize(flowComp, optimizer, opt_level="O2")
+
     flowComp.to(device)
     for param in flowComp.parameters():
         param.requires_grad = False

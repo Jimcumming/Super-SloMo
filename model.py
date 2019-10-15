@@ -5,6 +5,7 @@ import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+from apex import amp
 
 
 class down(nn.Module):
