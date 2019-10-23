@@ -24,7 +24,7 @@ def sendEmail(email, downloadbucket, video):
     # Replace sender@example.com with your "From" address.
     # This address must be verified with Amazon SES.
     SENDER = "Slomotatron <slomo@jcws.co.uk>"
-    download_link = "https://" + downloadbucket + ".eu-west-2.amazonaws.com/" + video
+    download_link = "https://" + downloadbucket + "s3.eu-west-2.amazonaws.com/" + video
 
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.
