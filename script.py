@@ -101,8 +101,8 @@ def sendEmail(email, downloadbucket, video):
 
 
 # Create SQS client
-sqs = boto3.client('sqs')
-s3 = boto3.client('s3')
+sqs = boto3.client('sqs', region_name='eu-west-2')
+s3 = boto3.client('s3', region_name='eu-west-2')
 
 
 queue_url = 'https://sqs.eu-west-2.amazonaws.com/839229338431/dev-slomo.fifo'
