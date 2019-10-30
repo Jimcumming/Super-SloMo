@@ -20,12 +20,35 @@ def processVideo(args):
     proc = subprocess.Popen(con, stdout=subprocess.PIPE, shell=True)
     print(proc.stdout.read())
 
+def create_presigned_url(bucket_name, object_name, expiration=3600):
+    """Generate a presigned URL to share an S3 object
+
+    :param bucket_name: string
+    :param object_name: string
+    :param expiration: Time in seconds for the presigned URL to remain valid
+    :return: Presigned URL as string. If error, returns None.
+    """
+
+    # Generate a presigned URL for the S3 object
+    s3_client = boto3.client('s3')
+    try:
+        response = s3_client.generate_presigned_url('get_object',
+                                                    Params={'Bucket': bucket_name,
+                                                            'Key': object_name},
+                                                    ExpiresIn=expiration)
+    except ClientError as e:
+        logging.error(e)
+        return None
+
+    # The response contains the presigned URL
+    return response
+
 def sendEmail(email, downloadbucket, video):
     # Replace sender@example.com with your "From" address.
     # This address must be verified with Amazon SES.
     SENDER = "Slomotatron <slomo@jcws.co.uk>"
     
-    download_link = "https://" + downloadbucket + ".s3.eu-west-2.amazonaws.com/" + video
+    download_link = create_presigned_url(downloadbucket, video)
 
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.
@@ -53,7 +76,7 @@ def sendEmail(email, downloadbucket, video):
     <body>
     <h1>Slomotatron</h1>
     <p>Slomotatron has processed your video, download it using the following link
-        <a href='"""+ download_link +"""'>"""+ video +"""</a></p>
+        <a href='"""+ download_link +"""'>"""+ video[video.rfind("/")+1:] + """</a></p>
     </body>
     </html>
     """
@@ -111,58 +134,60 @@ s3attachmentsBucket = 'slomo-app-api-dev-uploadsbucket-ko2jzrics82r'
 s3downloadBucket = 'slomo-app-api-dev-downloadsbucket-t4wypnf2t36r'
 videoInputFolder = os.path.join('..', 'input')
 
-# Receive message from SQS queue
-response = sqs.receive_message(
-    QueueUrl=queue_url,
-    AttributeNames=[
-        'SentTimestamp'
-    ],
-    MaxNumberOfMessages=1,
-    MessageAttributeNames=[
-        'All'
-    ],
-    VisibilityTimeout=1800,
-    WaitTimeSeconds=10
-)
 
-if 'Messages' in response:
-    message = response['Messages'][0]
-    messageAttrbibutes = message['MessageAttributes']
-    uploadAttachment = messageAttrbibutes['uploadAttachment']['StringValue']
-    savePath = os.path.join(videoInputFolder, uploadAttachment)
-    userId = messageAttrbibutes['userId']['StringValue']
-    email = messageAttrbibutes['email']['StringValue']
-    slomoFactor = messageAttrbibutes['slomoFactor']['StringValue']
-    receipt_handle = message['ReceiptHandle']
-    #download attachment
-    attachmentPath = "private/" + userId + "/" + uploadAttachment
-    s3.download_file(s3attachmentsBucket, attachmentPath, savePath)
-    #get fps of file using ffmpeg
-  
-    framerate = getFramerate(savePath)
-    #process file to slow motion
-    outputFile = os.path.join("..", "output", uploadAttachment)
-    args = {
-        "ffmpeg": "/usr/bin",
-        "video": '"' + savePath + '"',
-        "sf": str(slomoFactor),
-        "checkpoint": "../checkpoints/default.ckpt",
-        "fps": str(framerate),
-        "output": '"' + outputFile + '"',
-    }
-
-    result = processVideo(args)
-
-    #copy file to download folder
-    s3.upload_file(outputFile, s3downloadBucket, attachmentPath)
-    #generate email to client
-    sendEmail(email, s3downloadBucket, attachmentPath)
-
-    # Delete received message from queue
-    sqs.delete_message(
+while 1:
+    # Receive message from SQS queue
+    response = sqs.receive_message(
         QueueUrl=queue_url,
-        ReceiptHandle=receipt_handle
+        AttributeNames=[
+            'SentTimestamp'
+        ],
+        MaxNumberOfMessages=1,
+        MessageAttributeNames=[
+            'All'
+        ],
+        VisibilityTimeout=3600,
+        WaitTimeSeconds=10
     )
-    print('Received and deleted message: %s' % message)
-else:
-    print('no messages')
+
+    if 'Messages' in response:
+        message = response['Messages'][0]
+        messageAttrbibutes = message['MessageAttributes']
+        uploadAttachment = messageAttrbibutes['uploadAttachment']['StringValue']
+        savePath = os.path.join(videoInputFolder, uploadAttachment)
+        userId = messageAttrbibutes['userId']['StringValue']
+        email = messageAttrbibutes['email']['StringValue']
+        slomoFactor = messageAttrbibutes['slomoFactor']['StringValue']
+        receipt_handle = message['ReceiptHandle']
+        #download attachment
+        attachmentPath = "private/" + userId + "/" + uploadAttachment
+        s3.download_file(s3attachmentsBucket, attachmentPath, savePath)
+        #get fps of file using ffmpeg
+    
+        framerate = getFramerate(savePath)
+        #process file to slow motion
+        outputFile = os.path.join("..", "output", uploadAttachment)
+        args = {
+            "ffmpeg": "/usr/bin",
+            "video": '"' + savePath + '"',
+            "sf": str(slomoFactor),
+            "checkpoint": "../checkpoints/default.ckpt",
+            "fps": str(framerate),
+            "output": '"' + outputFile + '"',
+        }
+
+        result = processVideo(args)
+
+        #copy file to download folder
+        s3.upload_file(outputFile, s3downloadBucket, attachmentPath)
+        #generate email to client
+        sendEmail(email, s3downloadBucket, attachmentPath)
+
+        # Delete received message from queue
+        sqs.delete_message(
+            QueueUrl=queue_url,
+            ReceiptHandle=receipt_handle
+        )
+        print('Received and deleted message: %s' % message)
+    else:
+        print('no messages')
