@@ -21,14 +21,6 @@ def processVideo(args):
     print(proc.stdout.read())
 
 def create_presigned_url(bucket_name, object_name, expiration=3600):
-    """Generate a presigned URL to share an S3 object
-
-    :param bucket_name: string
-    :param object_name: string
-    :param expiration: Time in seconds for the presigned URL to remain valid
-    :return: Presigned URL as string. If error, returns None.
-    """
-
     # Generate a presigned URL for the S3 object
     s3_client = boto3.client('s3')
     try:
@@ -53,11 +45,6 @@ def sendEmail(email, downloadbucket, video):
     # Replace recipient@example.com with a "To" address. If your account 
     # is still in the sandbox, this address must be verified.
     RECIPIENT = email
-
-    # Specify a configuration set. If you do not want to use a configuration
-    # set, comment the following variable, and the 
-    # ConfigurationSetName=CONFIGURATION_SET argument below.
-    # CONFIGURATION_SET = "ConfigSet"
 
     # If necessary, replace us-west-2 with the AWS Region you're using for Amazon SES.
     AWS_REGION = "eu-west-1"
@@ -171,7 +158,7 @@ while 1:
             "ffmpeg": "/usr/bin",
             "video": '"' + savePath + '"',
             "sf": str(slomoFactor),
-            "checkpoint": "../checkpoints/default.ckpt",
+            "checkpoint": "../checkpoints/epoch300.ckpt",
             "fps": str(framerate),
             "output": '"' + outputFile + '"',
         }
