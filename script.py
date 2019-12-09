@@ -158,7 +158,7 @@ while 1:
             "ffmpeg": "/usr/bin",
             "video": '"' + savePath + '"',
             "sf": str(slomoFactor),
-            "checkpoint": "../checkpoints/epoch300.ckpt",
+            "checkpoint": "../checkpoints/default.ckpt",
             "fps": str(framerate),
             "output": '"' + outputFile + '"',
         }
