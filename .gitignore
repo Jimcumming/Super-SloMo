@@ -106,11 +106,12 @@ venv.bak/
 ffmpeg.exe
 GOPR9633.mp4
 output.mp4
-
 # ignore folder
 tmpSuperSloMo/
 .tmpSuperSloMo/
 checkpoints/
 data/combined
 data/pexels_plus
+data/f1
+data/football
 log/

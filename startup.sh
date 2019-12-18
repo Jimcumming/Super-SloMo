@@ -1,7 +1,7 @@
 #!/bin/bash
-eval "$(conda shell.bash hook)"
+source ~/anaconda3/etc/profile.d/conda.sh
 conda activate slomo
 aws s3 cp s3://slomo-checkpoints/default.ckpt /home/ubuntu/checkpoints/default.ckpt
 cd /home/ubuntu/Super-SloMo
 git pull
-python script.py
+python3 script.py
