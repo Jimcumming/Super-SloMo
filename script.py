@@ -144,6 +144,7 @@ while 1:
         savePath = os.path.join(videoInputFolder, uploadAttachment)
         userId = messageAttrbibutes['userId']['StringValue']
         email = messageAttrbibutes['email']['StringValue']
+        model = messageAttrbibutes['aiModel']['StringValue']
         slomoFactor = messageAttrbibutes['slomoFactor']['StringValue']
         receipt_handle = message['ReceiptHandle']
         #download attachment
@@ -158,7 +159,7 @@ while 1:
             "ffmpeg": "/usr/bin",
             "video": '"' + savePath + '"',
             "sf": str(slomoFactor),
-            "checkpoint": "../checkpoints/default.ckpt",
+            "checkpoint": "checkpoints/" + model + ".ckpt",
             "fps": str(framerate),
             "output": '"' + outputFile + '"',
         }
