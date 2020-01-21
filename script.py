@@ -20,7 +20,7 @@ def processVideo(args):
     proc = subprocess.Popen(con, stdout=subprocess.PIPE, shell=True)
     print(proc.stdout.read())
 
-def create_presigned_url(bucket_name, object_name, expiration=3600):
+def create_presigned_url(bucket_name, object_name, expiration=36000):
     # Generate a presigned URL for the S3 object
     s3_client = boto3.client('s3', config=boto3.session.Config(signature_version='s3v4'), region_name='eu-west-2')
     try:
